@@ -93,9 +93,17 @@ function savePortfolio() {
 }
 const isLocal = () => { try { return !!localStorage.getItem(LS_KEY); } catch (e) { return false; } };
 
+/* ปรับเทียบราคาประมาณ (กองทุน/ทอง) ให้ตรงกับราคาจริงที่ผู้ใช้กรอก */
+function scaled(a, k) {
+  if (!a || !k || k === 1) return a;
+  const m = v => v == null ? v : v * k;
+  return { ...a, price: m(a.price), prev_close: m(a.prev_close), high52: m(a.high52), low52: m(a.low52),
+    ma50: m(a.ma50), ma200: m(a.ma200), ladder: a.ladder.map(l => ({ ...l, price: m(l.price) })),
+    series: { d: a.series.d, c: a.series.c.map(m), ma200: a.series.ma200.map(m) } };
+}
 function positions() {
   const rows = S.portfolio.holdings.map(hd => {
-    const a = S.market.assets[hd.symbol];
+    const a = scaled(S.market.assets[hd.symbol], hd.price_scale);
     const cur = (a && a.currency) || hd.currency || 'USD';
     const price = hd.manual_price != null ? hd.manual_price : a ? a.price : null;
     const qty = +hd.qty || 0;
@@ -272,12 +280,14 @@ function meter(v, thin) {
   if (!thin) for (const t of [45, 60, 75]) el.append(h('s', { style: `left:${t}%` }));
   return el;
 }
+const tick = r => r.a && r.a.synthetic ? (r.name || r.symbol) : r.symbol.replace('.BK', '');
 const chip = score => { const z = zoneOf(score); return h('span', { class: 'chip ' + z.cls }, h('i'), z.label); };
 
 /* ---------- views ---------- */
 function viewOverview() {
   const pos = positions(), out = [];
   if (!pos.rows.length) return [h('div', { class: 'card empty' }, 'ยังไม่มีสินทรัพย์ในพอร์ต — เพิ่มได้ที่แท็บ "จัดการพอร์ต"')];
+  if (!pos.total) out.push(h('p', { class: 'note warn' }, 'ยังไม่ได้กรอกจำนวนที่ถือ — ไปที่แท็บ "จัดการพอร์ต" แล้วใส่จำนวนและต้นทุนเฉลี่ยของแต่ละตัว ข้อมูลจะเก็บไว้ในเบราว์เซอร์นี้เท่านั้น'));
   const cost = pos.rows.reduce((s, r) => s + (r.cost || 0), 0);
   const pl = pos.rows.reduce((s, r) => s + (r.pl || 0), 0);
   const day = pos.rows.reduce((s, r) => s + r.dayChg, 0);
@@ -322,7 +332,7 @@ function viewOverview() {
   const parts = Object.keys(TYPES).filter(t => byType[t] > 0).map(t => ({ t, w: byType[t] / pos.total }));
   const byCur = {};
   pos.rows.forEach(r => { byCur[r.cur] = (byCur[r.cur] || 0) + r.weight; });
-  out.push(h('section', { class: 'card' },
+  if (pos.total) out.push(h('section', { class: 'card' },
     h('h2', {}, 'สัดส่วนสินทรัพย์'),
     h('p', { class: 'small muted' }, 'สกุลเงิน: ' + Object.entries(byCur).map(([c, w]) => `${c} ${pct(w, 0, false)}`).join(' · ')),
     h('div', { class: 'segbar', role: 'img', 'aria-label': parts.map(p => `${TYPES[p.t].label} ${pct(p.w, 0, false)}`).join(', ') },
@@ -340,7 +350,7 @@ function viewOverview() {
         h('th', {}, 'มูลค่า'), h('th', {}, 'กำไร/ขาดทุน'), h('th', { class: 'hide-sm' }, 'สัญญาณ'))),
       h('tbody', {}, sorted.map(r => h('tr', {},
         h('td', {}, h('span', { class: 'sw', style: `background:${(TYPES[r.type] || TYPES.stock).color}`, title: (TYPES[r.type] || TYPES.stock).label }),
-          h('strong', {}, r.symbol.replace('.BK', '')), h('span', { class: 'sub name' }, r.name || '')),
+          h('strong', {}, tick(r)), h('span', { class: 'sub name' }, r.a && r.a.synthetic ? 'ราคาประมาณ' : r.name || '')),
         h('td', { class: 'hide-sm' }, r.a && r.a.series ? sparkline(r.a.series) : ''),
         h('td', { class: 'num' }, r.price != null ? money(r.price, r.cur) : 'ไม่มีราคา',
           h('span', { class: 'sub ' + cls(r.a && r.a.change_pct) }, r.a ? pct(r.a.change_pct, 2) : '')),
@@ -356,7 +366,8 @@ function signalCard(r, p, opts = {}) {
   const notes = [];
   if (a.flags.includes('falling_knife')) notes.push(['warn', 'ราคาลงแรงผิดปกติในเดือนที่ผ่านมา — แบ่งไม้ซื้อ อย่าเข้าครั้งเดียวทั้งก้อน และเช็กข่าวว่าพื้นฐานเปลี่ยนหรือไม่']);
   if (a.flags.includes('below_ma200')) notes.push(['', 'ราคาอยู่ต่ำกว่าเส้นค่าเฉลี่ย 200 วัน (แนวโน้มระยะกลางเป็นขาลง)']);
-  if (a.flags.includes('short_history')) notes.push(['', 'ข้อมูลย้อนหลังน้อยกว่า 2 ปี คะแนนจึงเชื่อถือได้น้อยลง']);
+  if (a.flags.includes('short_history')) notes.push(['', a.series.d.length < 252 ? 'ประวัติราคาไม่ถึง 1 ปี ยังไม่มีฐานให้เทียบว่าถูกหรือแพง ระบบจึงยังไม่ให้สัญญาณซื้อ' : 'ข้อมูลย้อนหลังน้อยกว่า 2 ปี คะแนนจึงเชื่อถือได้น้อยลง']);
+  if (a.synthetic) notes.push(['', 'ราคาเป็นค่าประมาณจากสินทรัพย์อ้างอิงแปลงเป็นบาท อาจต่างจากราคาในแอปเล็กน้อย']);
   if (a.stale) notes.push(['warn', 'ดึงราคารอบล่าสุดไม่สำเร็จ กำลังแสดงข้อมูลรอบก่อน']);
   if (p && p.capped) notes.push(['', `จำกัดยอดซื้อเพราะน้ำหนักในพอร์ตใกล้เพดาน ${pct(r.max_weight, 0, false)} ที่ตั้งไว้`]);
 
@@ -393,7 +404,7 @@ function signalCard(r, p, opts = {}) {
   const f = a.fundamentals;
   return h('article', { class: 'card stack' },
     h('div', { class: 'row between' },
-      h('div', {}, h('h3', {}, r.symbol.replace('.BK', ''), ' ', h('span', { class: 'muted', style: 'font-weight:400' }, r.name || a.name)),
+      h('div', {}, h('h3', {}, tick(r), ' ', a.synthetic ? null : h('span', { class: 'muted', style: 'font-weight:400' }, r.name || a.name)),
         h('p', { class: 'small' }, h('span', { class: 'num' }, money(a.price, r.cur)), ' ',
           h('span', { class: cls(a.change_pct) }, pct(a.change_pct, 2)),
           h('span', { class: 'muted' }, ` · ต่ำกว่าจุดสูงสุด 52 สัปดาห์ ${pct(a.drawdown, 1, false)}`))),
@@ -430,7 +441,7 @@ function viewSignals() {
     h('section', { class: 'card' },
       h('div', { class: 'row between' },
         h('div', {}, h('h2', {}, buys.length ? `รอบนี้ควรซื้อเพิ่ม ${money(plan.total, S.cur, 0)} ใน ${buys.length} ตัว` : 'รอบนี้ยังไม่มีตัวไหนถึงจุดซื้อเพิ่ม'),
-          h('p', { class: 'small muted' }, buys.length ? buys.map(r => `${r.symbol.replace('.BK', '')} ${money(plan.plan.get(r.symbol).amt, S.cur, 0)}`).join(' · ')
+          h('p', { class: 'small muted' }, buys.length ? buys.map(r => `${tick(r)} ${money(plan.plan.get(r.symbol).amt, S.cur, 0)}`).join(' · ')
             : 'DCA ตามแผนปกติต่อไป แล้วเก็บงบส่วนนี้ไว้รอจังหวะ')),
         h('label', { class: 'small ink2' }, 'งบซื้อสะสมต่อเดือน (บาท) ',
           h('input', { type: 'number', min: 0, step: 500, style: 'width:110px', value: S.portfolio.opportunity_budget,
@@ -528,7 +539,7 @@ function viewManage() {
         h('p', { class: 'small muted' }, isLocal() ? 'กำลังใช้ข้อมูลที่แก้ไขในเบราว์เซอร์นี้ (เก็บในเครื่อง ไม่ถูกส่งออกไปไหน)' : 'กำลังใช้ข้อมูลจากไฟล์ data/portfolio.json')),
         h('button', { class: 'btn primary', onclick: () => { P.holdings.push({ symbol: '', name: '', type: 'stock', sector: '', qty: 0, avg_cost: 0, mode: 'accumulate', max_weight: 0.1 }); commit(); } }, '+ เพิ่มสินทรัพย์')),
       h('div', { class: 'tablewrap' }, h('table', { class: 'edit' },
-        h('thead', {}, h('tr', {}, ['Symbol (Yahoo)', 'ชื่อ', 'ประเภท', 'กลุ่ม', 'จำนวน', 'ต้นทุนเฉลี่ย', 'วิธีซื้อ', 'เพดานน้ำหนัก %', ''].map(t => h('th', { style: 'text-align:left' }, t)))),
+        h('thead', {}, h('tr', {}, ['Symbol (Yahoo)', 'ชื่อ', 'ประเภท', 'กลุ่ม', 'จำนวน', 'ต้นทุนเฉลี่ย', 'ราคา/NAV จริง', 'วิธีซื้อ', 'เพดานน้ำหนัก %', ''].map(t => h('th', { style: 'text-align:left' }, t)))),
         h('tbody', {}, P.holdings.map((hd, i) => h('tr', {},
           h('td', {}, field(hd, 'symbol', { class: 'sym', placeholder: 'เช่น VOO, PTT.BK' })),
           h('td', {}, field(hd, 'name', { class: 'nm' })),
@@ -536,11 +547,16 @@ function viewManage() {
           h('td', {}, field(hd, 'sector', { class: 'sym' })),
           h('td', {}, field(hd, 'qty', { type: 'number', step: 'any', min: 0 })),
           h('td', {}, field(hd, 'avg_cost', { type: 'number', step: 'any', min: 0 })),
+          h('td', {}, (() => { const raw = S.market.assets[hd.symbol];
+            if (!raw || !raw.synthetic) return h('span', { class: 'muted small' }, raw ? money(raw.price, raw.currency) : '–');
+            return h('input', { type: 'number', step: 'any', min: 0, title: 'กรอกราคาหรือ NAV ล่าสุดจากแอป เพื่อปรับเทียบค่าประมาณ',
+              value: +(raw.price * (hd.price_scale || 1)).toFixed(4),
+              onchange: e => { const v = +e.target.value; hd.price_scale = v > 0 ? v / raw.price : null; commit(); } }); })()),
           h('td', {}, sel(hd, 'mode', [['dca', 'DCA ทุกเดือน'], ['accumulate', 'สะสมเมื่อราคาลง']])),
           h('td', {}, h('input', { type: 'number', min: 0, max: 100, step: 1, value: hd.max_weight ? Math.round(hd.max_weight * 100) : '',
             onchange: e => { hd.max_weight = e.target.value ? +e.target.value / 100 : null; commit(); } })),
           h('td', {}, h('button', { class: 'btn ghost', 'aria-label': 'ลบ ' + hd.symbol, onclick: () => { if (confirm(`ลบ ${hd.symbol || 'แถวนี้'} ออกจากพอร์ต?`)) { P.holdings.splice(i, 1); commit(); } } }, '✕'))))))),
-      h('p', { class: 'small muted' }, 'ต้นทุนเฉลี่ยกรอกเป็นสกุลเงินของสินทรัพย์นั้น (หุ้นสหรัฐเป็น USD, หุ้นไทยเป็นบาท) · symbol ใหม่ที่ยังไม่อยู่ใน data/portfolio.json จะยังไม่มีราคาจนกว่าจะเพิ่มในไฟล์')),
+      h('p', { class: 'small muted' }, 'ต้นทุนเฉลี่ยกรอกเป็นสกุลเงินของสินทรัพย์นั้น (หุ้นสหรัฐเป็น USD, หุ้นไทยเป็นบาท) · กองทุนรวมและทองใช้ราคาประมาณจากสินทรัพย์อ้างอิง ให้กรอกราคา/NAV จริงล่าสุดจากแอปหนึ่งครั้งเพื่อปรับเทียบ · symbol ใหม่ที่ยังไม่อยู่ใน data/portfolio.json จะยังไม่มีราคาจนกว่าจะเพิ่มในไฟล์')),
     h('section', { class: 'card stack' },
       h('h2', {}, 'สำรองและย้ายข้อมูล'),
       h('div', { class: 'row' },

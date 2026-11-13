@@ -1,15 +1,18 @@
 {
-  "_note": "พอร์ตตัวอย่าง — แก้ตัวเลขได้ที่นี่หรือในแท็บ 'จัดการพอร์ต' บนหน้าเว็บ  symbol ใช้รหัสของ Yahoo Finance (หุ้นไทยเติม .BK)",
+  "_note": "ไฟล์นี้เก็บเฉพาะรายชื่อสินทรัพย์ จำนวนและต้นทุนจริงกรอกในแท็บ 'จัดการพอร์ต' บนหน้าเว็บ (เก็บในเบราว์เซอร์เท่านั้น)  symbol ใช้รหัสของ Yahoo Finance (หุ้นไทยเติม .BK)",
   "display_currency": "THB",
   "opportunity_budget": 5000,
   "holdings": [
-    {"symbol": "VOO", "name": "Vanguard S&P 500 ETF", "type": "etf", "sector": "ตลาดกว้างสหรัฐ", "qty": 6, "avg_cost": 520, "mode": "dca"},
-    {"symbol": "QQQM", "name": "Invesco NASDAQ 100 ETF", "type": "etf", "sector": "เทคโนโลยี", "qty": 8, "avg_cost": 190, "mode": "dca"},
-    {"symbol": "NVDA", "name": "NVIDIA", "type": "stock", "sector": "เทคโนโลยี", "qty": 10, "avg_cost": 110, "mode": "accumulate", "max_weight": 0.15},
-    {"symbol": "GOOGL", "name": "Alphabet", "type": "stock", "sector": "เทคโนโลยี", "qty": 5, "avg_cost": 160, "mode": "accumulate", "max_weight": 0.15},
-    {"symbol": "CPALL.BK", "name": "CP All", "type": "stock", "sector": "ค้าปลีก", "qty": 300, "avg_cost": 58, "mode": "accumulate", "max_weight": 0.10},
-    {"symbol": "BDMS.BK", "name": "Bangkok Dusit Medical", "type": "stock", "sector": "สุขภาพ", "qty": 500, "avg_cost": 26, "mode": "accumulate", "max_weight": 0.10},
-    {"symbol": "BTC-USD", "name": "Bitcoin", "type": "crypto", "sector": "คริปโต", "qty": 0.01, "avg_cost": 60000, "mode": "accumulate", "max_weight": 0.08},
-    {"symbol": "GLD", "name": "SPDR Gold Shares", "type": "gold", "sector": "ทองคำ", "qty": 2, "avg_cost": 230, "mode": "dca"}
+    {"symbol": "SP500-THB", "name": "KKP US500-UH-E", "type": "fund", "sector": "ตลาดกว้างสหรัฐ", "qty": 0, "avg_cost": 0, "mode": "dca"},
+    {"symbol": "SCHD", "name": "Schwab US Dividend Equity ETF", "type": "etf", "sector": "หุ้นปันผลสหรัฐ", "qty": 0, "avg_cost": 0, "mode": "dca"},
+    {"symbol": "SMH", "name": "VanEck Semiconductor ETF", "type": "etf", "sector": "เซมิคอนดักเตอร์", "qty": 0, "avg_cost": 0, "mode": "dca"},
+    {"symbol": "GOLD965-THB", "name": "ทองคำ 96.5% (Gold Now)", "type": "gold", "sector": "ทองคำ", "qty": 0, "avg_cost": 0, "mode": "dca"},
+    {"symbol": "GOOGL", "name": "Alphabet", "type": "stock", "sector": "เทคโนโลยี", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
+    {"symbol": "AMZN", "name": "Amazon", "type": "stock", "sector": "เทคโนโลยี", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
+    {"symbol": "PANW", "name": "Palo Alto Networks", "type": "stock", "sector": "ไซเบอร์ซีเคียวริตี้", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
+    {"symbol": "ISRG", "name": "Intuitive Surgical", "type": "stock", "sector": "สุขภาพ", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
+    {"symbol": "VST", "name": "Vistra", "type": "stock", "sector": "ไฟฟ้า/พลังงาน", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
+    {"symbol": "RKLB", "name": "Rocket Lab", "type": "stock", "sector": "อวกาศ", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
+    {"symbol": "SCB.BK", "name": "SCB X", "type": "stock", "sector": "การเงิน", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10}
   ]
 }
