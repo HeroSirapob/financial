@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)">
+<meta name="robots" content="noindex">
+<title>พอร์ตลงทุน</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-row">
+    <div>
+      <h1>พอร์ตลงทุน</h1>
+      <p class="muted small" id="updated">กำลังโหลดข้อมูล…</p>
+    </div>
+    <div class="seg" id="currency" role="group" aria-label="สกุลเงินที่แสดง">
+      <button data-cur="THB">฿ บาท</button>
+      <button data-cur="USD">$ USD</button>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs" role="tablist">
+    <button role="tab" data-tab="overview">ภาพรวม</button>
+    <button role="tab" data-tab="signals">สัญญาณซื้อ</button>
+    <button role="tab" data-tab="ideas">หุ้นน่าสนใจ</button>
+    <button role="tab" data-tab="manage">จัดการพอร์ต</button>
+  </nav>
+</header>
+<main id="app"></main>
+<footer class="muted small foot">
+  ข้อมูลราคาจาก Yahoo Finance อัปเดตวันละครั้ง อาจล่าช้าหรือคลาดเคลื่อน ·
+  เครื่องมือนี้ช่วยจัดระเบียบการตัดสินใจ ไม่ใช่คำแนะนำการลงทุน
+</footer>
+<div id="tip" class="tip" hidden></div>
+<script src="assets/app.js"></script>
+</body>
+</html>
