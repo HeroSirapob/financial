@@ -26,6 +26,15 @@ WEIGHTS = {"drawdown": 0.35, "technical": 0.25, "trend": 0.20, "valuation": 0.20
 LADDER_QUANTILES = [(0.50, "ไม้ 1"), (0.75, "ไม้ 2"), (0.90, "ไม้ 3"), (0.97, "ไม้ 4")]
 FX_SYMBOLS = {"USD": "THB=X"}  # 1 หน่วยสกุลนั้น = กี่บาท
 
+# สินทรัพย์ที่ Yahoo ไม่มีราคาโดยตรง: ประมาณจากสินทรัพย์อ้างอิง × อัตราแลกเปลี่ยน × ตัวคูณ (หน่วยเป็นบาท)
+# ราคาที่ได้เป็นค่าประมาณ ผู้ใช้ปรับเทียบกับราคาจริงได้ในแท็บ "จัดการพอร์ต"
+SYNTHETIC = {
+    # กองทุนดัชนี S&P 500 ไม่ป้องกันค่าเงิน: เคลื่อนไหวตาม S&P 500 เป็นบาท
+    "SP500-THB": {"base": "IVV", "fx": "THB=X", "factor": 1.0},
+    # ทองคำแท่ง 96.5% ต่อ 1 บาททอง (15.244 กรัม): 15.244 × 0.965 / 31.1035 ทรอยออนซ์
+    "GOLD965-THB": {"base": "GC=F", "fx": "THB=X", "factor": 0.4729},
+}
+
 
 def clamp(x: float, lo: float = 0.0, hi: float = 100.0) -> float:
     return max(lo, min(hi, x))
@@ -80,6 +89,15 @@ def fetch_history(symbol: str, tries: int = 3):
         time.sleep(2 * (i + 1))
     print(f"  ! {symbol}: ดึงราคาไม่สำเร็จ ({last_err})", file=sys.stderr)
     return None, {}, None
+
+
+def fetch_synthetic(spec: dict):
+    base, _, _ = fetch_history(spec["base"])
+    fx, _, _ = fetch_history(spec["fx"])
+    if base is None or fx is None:
+        return None
+    fx = fx.reindex(base.index.union(fx.index)).ffill().reindex(base.index)
+    return (base * fx * spec["factor"]).dropna()
 
 
 def fetch_fundamentals(tk) -> dict | None:
@@ -180,6 +198,9 @@ def analyze(close: pd.Series, fundamentals: dict | None) -> dict:
     used = {k: v for k, v in comps.items() if v is not None}
     wsum = sum(WEIGHTS[k] for k in used)
     total = sum(v * WEIGHTS[k] for k, v in used.items()) / wsum
+    if n < 252:
+        # ประวัติราคาไม่ถึง 1 ปี (เช่น หุ้นเพิ่ง IPO): ยังไม่มีฐานให้เทียบ จึงไม่ให้คะแนนถึงโซนซื้อ
+        total = min(total, 44.0)
 
     # --- ขั้นบันไดราคาซื้อ จากการกระจายตัวของ drawdown ในอดีตของตัวเอง ---
     ladder = []
@@ -246,17 +267,21 @@ def main() -> int:
     assets, errors = {}, []
     for sym, cfg in symbols.items():
         print(f"- {sym}")
-        close, meta, tk = fetch_history(sym)
+        if sym in SYNTHETIC:
+            close, meta, tk = fetch_synthetic(SYNTHETIC[sym]), {"currency": "THB"}, None
+        else:
+            close, meta, tk = fetch_history(sym)
         if close is None or len(close) < 30:
             errors.append(sym)
             if sym in previous:           # เก็บข้อมูลรอบก่อนไว้ ดีกว่าหายไปเลย
                 assets[sym] = {**previous[sym], "stale": True}
             continue
         fundamentals = None
-        if cfg.get("type") == "stock":
+        if cfg.get("type") == "stock" and tk is not None:
             fundamentals = fetch_fundamentals(tk) or (previous.get(sym) or {}).get("fundamentals")
         a = analyze(close, fundamentals)
         a["currency"] = (meta.get("currency") or cfg.get("currency") or "USD").upper()
+        a["synthetic"] = sym in SYNTHETIC
         a["name"] = cfg.get("name") or meta.get("longName") or meta.get("shortName") or sym
         assets[sym] = a
         time.sleep(0.4)

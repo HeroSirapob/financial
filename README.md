@@ -21,7 +21,7 @@
 
 1. merge เข้า branch `main`
 2. Settings → Pages → Source: *Deploy from a branch* → `main` / root
-   (repo แบบ private ต้องใช้ GitHub Pro จึงจะเปิด Pages ได้)
+   (repo ต้องเป็น public หรือใช้ GitHub Pro)
 3. Settings → Actions → General → Workflow permissions → *Read and write*
 4. Actions → *Update market data* → Run workflow เพื่อดึงราคารอบแรก
 
@@ -38,6 +38,18 @@ python -m http.server 8000   # เปิด http://localhost:8000
 ใช้รหัสของ Yahoo Finance: หุ้นสหรัฐ `NVDA`, หุ้นไทย `PTT.BK`, คริปโต `BTC-USD`,
 กองทุนรวมไทยใช้รหัส `0P…​.BK` (ค้นชื่อกองใน finance.yahoo.com)
 สินทรัพย์ที่ Yahoo ไม่มีราคา ให้ใส่ `"manual_price"` ในรายการนั้นแทน (จะนับมูลค่าแต่ไม่มีสัญญาณ)
+
+สินทรัพย์ที่ Yahoo ไม่มีราคาโดยตรงใช้ราคาประมาณ (กำหนดใน `SYNTHETIC` ของ `scripts/update_data.py`):
+
+- `SP500-THB` — กองทุนดัชนี S&P 500 ไม่ป้องกันค่าเงิน ประมาณจาก IVV × USD/THB
+- `GOLD965-THB` — ทองคำแท่ง 96.5% ต่อ 1 บาททอง ประมาณจากราคาทองโลก × USD/THB × 0.4729
+
+กรอกราคา/NAV จริงล่าสุดในแท็บ "จัดการพอร์ต" หนึ่งครั้งเพื่อปรับเทียบ หลังจากนั้นราคาจะขยับตามสินทรัพย์อ้างอิง
+
+## ความเป็นส่วนตัว
+
+`data/portfolio.json` เก็บเฉพาะรายชื่อสินทรัพย์ (จำนวนเป็น 0) จำนวนและต้นทุนจริงกรอกบนหน้าเว็บและเก็บใน
+localStorage ของเบราว์เซอร์เท่านั้น ย้ายเครื่องด้วยปุ่มดาวน์โหลด/นำเข้าไฟล์
 
 ## คะแนนน่าซื้อ
 
