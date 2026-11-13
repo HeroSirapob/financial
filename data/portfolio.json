@@ -13,6 +13,7 @@
     {"symbol": "ISRG", "name": "Intuitive Surgical", "type": "stock", "sector": "สุขภาพ", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
     {"symbol": "VST", "name": "Vistra", "type": "stock", "sector": "ไฟฟ้า/พลังงาน", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
     {"symbol": "RKLB", "name": "Rocket Lab", "type": "stock", "sector": "อวกาศ", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
+    {"symbol": "ONON", "name": "On Holding", "type": "stock", "sector": "สินค้าผู้บริโภค", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
     {"symbol": "SCB.BK", "name": "SCB X", "type": "stock", "sector": "การเงิน", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10}
   ]
 }
