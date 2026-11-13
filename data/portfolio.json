@@ -5,10 +5,10 @@
   "holdings": [
     {"symbol": "SP500-THB", "name": "KKP US500-UH-E", "type": "fund", "sector": "ตลาดกว้างสหรัฐ", "qty": 0, "avg_cost": 0, "mode": "dca"},
     {"symbol": "SCHD", "name": "Schwab US Dividend Equity ETF", "type": "etf", "sector": "หุ้นปันผลสหรัฐ", "qty": 0, "avg_cost": 0, "mode": "dca"},
-    {"symbol": "SMH", "name": "VanEck Semiconductor ETF", "type": "etf", "sector": "เซมิคอนดักเตอร์", "qty": 0, "avg_cost": 0, "mode": "dca"},
+    {"symbol": "SMH", "name": "VanEck Semiconductor ETF", "type": "etf", "sector": "เซมิคอนดักเตอร์", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.15},
     {"symbol": "GOLD965-THB", "name": "ทองคำ 96.5% (Gold Now)", "type": "gold", "sector": "ทองคำ", "qty": 0, "avg_cost": 0, "mode": "dca"},
-    {"symbol": "GOOGL", "name": "Alphabet", "type": "stock", "sector": "เทคโนโลยี", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
-    {"symbol": "AMZN", "name": "Amazon", "type": "stock", "sector": "เทคโนโลยี", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
+    {"symbol": "GOOGL", "name": "Alphabet", "type": "stock", "sector": "เทคโนโลยี", "qty": 0, "avg_cost": 0, "mode": "dca"},
+    {"symbol": "AMZN", "name": "Amazon", "type": "stock", "sector": "เทคโนโลยี", "qty": 0, "avg_cost": 0, "mode": "dca"},
     {"symbol": "PANW", "name": "Palo Alto Networks", "type": "stock", "sector": "ไซเบอร์ซีเคียวริตี้", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
     {"symbol": "ISRG", "name": "Intuitive Surgical", "type": "stock", "sector": "สุขภาพ", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
     {"symbol": "VST", "name": "Vistra", "type": "stock", "sector": "ไฟฟ้า/พลังงาน", "qty": 0, "avg_cost": 0, "mode": "accumulate", "max_weight": 0.10},
